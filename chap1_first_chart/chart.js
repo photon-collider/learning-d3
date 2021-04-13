@@ -1,6 +1,6 @@
 
 async function drawLineChart() {
-    const dataset = await d3.json("./covid_daily.json")
+    const dataset = await d3.json("../datasets/covid_daily.json")
     const yAccessor = d => d.hospitalized
 
     const dateParser = d3.timeParse("%Y%m%d")

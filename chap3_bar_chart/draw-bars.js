@@ -2,6 +2,7 @@ async function drawBars() {
     let dataset = await d3.json("../datasets/covid_daily.json")
     console.log(dataset[0])
 
+    //const metricAccessor = d => d.deathIncrease
     const metricAccessor = d => d.hospitalizedIncrease
     const width = 600
     let dimensions = {
@@ -47,15 +48,50 @@ async function drawBars() {
     const bins = binsGenerator(dataset)
 
     const yAccessor = d => d.length
+
     const yScale = d3.scaleLinear()
         .domain([0, d3.max(bins, yAccessor)])
         .nice()
 
     const binsGroup = bounds.append("g")
 
+    const binGroups = binsGroup.selectAll("g")
+        .data(bins)
+        .enter().append("g")
+
+    const barPadding = 1
+
+    const barRects = binGroups.append("rect")
+        .attr("x", d => xScale(d.x0) + barPadding / 2)
+        .attr("y", d => yScale(yAccessor(d)))
+        .attr("width", d => d3.max([
+            0,
+            xScale(d.x1) - xScale(d.x0) - barPadding
+        ]))
+        .attr("height", d => dimensions.boundedHeight
+            - yScale(yAccessor(d)))
+        .attr("fill", "cornflowerblue")
     console.log(bins)
 
+    const barText = binGroups.filter(yAccessor)
+        .append("text")
+        .attr("x", d => xScale(d.x0) + (xScale(d.x1) - xScale(d.x0)) / 2)
+        .attr("y", d => yScale(yAccessor(d)) - 5)
+        .text(yAccessor)
+        .style("text-anchor", "middle")
+        .style("fill", "darkgrey")
+        .style("font-size", "12px")
+        .style("font-family", "sans-serif")
 
+    const mean = d3.mean(dataset, metricAccessor)
+
+    const meanLine = bounds.append("line")
+        .attr("x1", xScale(mean))
+        .attr("x2", xScale(mean))
+        .attr("y1", -15)
+        .attr("y2", dimensions.boundedHeight)
+        .attr("stroke", "maroon")
+        .attr("stroke-dasharray", "2px 4px")
 }
 
 drawBars()

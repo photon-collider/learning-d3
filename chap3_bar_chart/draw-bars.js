@@ -3,7 +3,9 @@ async function drawBars() {
     console.log(dataset[0])
 
     //const metricAccessor = d => d.deathIncrease
-    const metricAccessor = d => d.hospitalizedIncrease
+    //const metricAccessor = d => d.hospitalizedIncrease
+    const metricAccessor = d => d.hospitalizedCurrently
+
     const width = 600
     let dimensions = {
         width: width,
@@ -46,24 +48,31 @@ async function drawBars() {
         .thresholds(12)
 
     const bins = binsGenerator(dataset)
+    console.log(bins)
+    for (bin_id in bins){
+        console.log(bins[bin_id].length)
+    }
 
     const yAccessor = d => d.length
 
     const yScale = d3.scaleLinear()
         .domain([0, d3.max(bins, yAccessor)])
+        .range([dimensions.boundedHeight, 0])
         .nice()
-
+    
+    
     const binsGroup = bounds.append("g")
 
     const binGroups = binsGroup.selectAll("g")
         .data(bins)
-        .enter().append("g")
+        .enter()
+        .append("g")
 
     const barPadding = 1
 
     const barRects = binGroups.append("rect")
         .attr("x", d => xScale(d.x0) + barPadding / 2)
-        .attr("y", d => yScale(yAccessor(d)))
+        .attr("y", d => yScale(yAccessor(d)) )
         .attr("width", d => d3.max([
             0,
             xScale(d.x1) - xScale(d.x0) - barPadding
@@ -71,7 +80,6 @@ async function drawBars() {
         .attr("height", d => dimensions.boundedHeight
             - yScale(yAccessor(d)))
         .attr("fill", "cornflowerblue")
-    console.log(bins)
 
     const barText = binGroups.filter(yAccessor)
         .append("text")
@@ -92,6 +100,28 @@ async function drawBars() {
         .attr("y2", dimensions.boundedHeight)
         .attr("stroke", "maroon")
         .attr("stroke-dasharray", "2px 4px")
+    
+    const meanLabel = bounds.append("text")
+    .attr("x", xScale(mean))
+    .attr("y", -20)
+    .text("mean")
+    .attr("fill", "maroon")
+    .style("font-size", "12px")
+    .style("text-anchor", "middle")
+
+    const xAxisGenerator = d3.axisBottom()
+        .scale(xScale)
+    
+    const xAxis = bounds.append("g")
+        .call(xAxisGenerator)
+        .style("transform", `translateY(${dimensions.boundedHeight}px)`)
+    
+    const xAxisLabel = xAxis.append("text")
+        .attr("x", dimensions.boundedWidth/2)
+        .attr("y", dimensions.margin.bottom - 10)
+        .attr("fill", "black")
+        .style("font-size", "1.4em")
+        .text("Number of Hospitalized Patients")
 }
 
 drawBars()

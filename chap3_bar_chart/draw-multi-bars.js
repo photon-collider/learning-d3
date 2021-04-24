@@ -1,10 +1,10 @@
-async function drawBars() {
+async function drawHistogram(metric) {
     let dataset = await d3.json("../datasets/covid_daily.json")
     console.log(dataset[0])
 
     //const metricAccessor = d => d.deathIncrease
     //const metricAccessor = d => d.hospitalizedIncrease
-    const metricAccessor = d => d.hospitalizedCurrently
+    const metricAccessor = d => d[metric]
 
     const width = 600
     let dimensions = {
@@ -30,22 +30,17 @@ async function drawBars() {
         .append("svg")
         .attr("width", dimensions.width)
         .attr("height", dimensions.height)
-        .attr("role", "figure")
-        .attr("tabindex", "0")
 
     wrapper.append("title")
-        .text("Histogram looking at distribution of Hospitalized Patients")
-
-    wrapper.selectAll("text")
-        .attr("role", "presentation")
-        .attr("aria-hidden", "true")
+        .text("Histograms of COVID-19 Data")
 
     const bounds = wrapper.append("g")
         .style("transform",
             `translate(${dimensions.margin.left}px, 
                        ${dimensions.margin.top}px)`
         )
-
+        .attr("role", "figure")
+        .attr("tabindex", "0")
 
     const xScale = d3.scaleLinear()
         .domain(d3.extent(dataset, metricAccessor))
@@ -58,7 +53,6 @@ async function drawBars() {
         .thresholds(12)
 
     const bins = binsGenerator(dataset)
-
 
     const yAccessor = d => d.length
 
@@ -75,13 +69,8 @@ async function drawBars() {
 
     const binGroups = binsGroup.selectAll("g")
         .data(bins)
-        .enter().append("g")
-        .attr("tabindex", "0")
-        .attr("role", "listitem")
-        .attr("aria-label", d =>
-            `There were ${yAccessor(d)} days between 
-            ${d.x0.toString().slice(0, 4)} and 
-            ${d.x1.toString().slice(0, 4)} hospitalized patients`)
+        .enter()
+        .append("g")
 
     const barPadding = 1
 
@@ -136,9 +125,16 @@ async function drawBars() {
         .attr("y", dimensions.margin.bottom - 10)
         .attr("fill", "black")
         .style("font-size", "1.4em")
-        .text("Number of Hospitalized Patients")
+        .text(metric)
+
+
 }
 
-drawBars()
+const metrics = [
+    "inIcuCurrently",
+    "hospitalizedCurrently",
+    "positiveIncrease"
+]
 
+metrics.forEach(drawHistogram)
 
